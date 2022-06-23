@@ -73,13 +73,15 @@ def data_agg(data):
     # sample data for each data
 
     # DATA = b"hi"
-
-    DATA = bytes(data['data'], 'utf-8')
-
+    # befor encryption convert data to bytes form
+    # DATA = bytes(data['data'], 'utf-8')
+    data: list = data['data']
     # Creation of the random Sensor Network
 
     S = {x: dict({"xd": None, "yd": None, "type": None, "E": None,
-                  "ENERGY": None, "G": None, "min_dis": None, "min_dis_cluster": None, "privKey": privKey, "pubKey": pubKey, "DATA": DATA}) for x in range(1, n+2)}
+                  "ENERGY": None, "G": None, "min_dis": None, "min_dis_cluster": None, "privKey": privKey, "pubKey": pubKey, "DATA": ""}) for x in range(1, n+2)}
+    for (i, v) in enumerate(data):
+        S[i+1]["DATA"] = bytes(str(v), 'utf-8')
     XR = {}
     YR = {}
 
