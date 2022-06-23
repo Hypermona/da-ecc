@@ -15,7 +15,7 @@ def drink_list(requet):
         print(type(requet.data))
         data = data_agg(data=requet.data)
 
-        return Response({"charts": data["charts"], "encryption": data["enc"], "decryption": data["dec"]})
+        return Response({"charts": data["charts"], "encryption": data["enc"], "decryption": data["dec"], "sink": data["sink"], "base": data["base"]})
         # survey = Survey.objects.all()
         # ss = SurveySerializer(survey, many=True)
         # return JsonResponse({"surveys": ss.data})

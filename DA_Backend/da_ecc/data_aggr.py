@@ -1,8 +1,9 @@
+from turtle import color
 from .ECC import encrypt_ECC, decrypt_ECC
 from collections import namedtuple
 from operator import ge
 from webbrowser import get
-from matplotlib import pyplot as plt
+from matplotlib import colors, pyplot as plt
 import numpy as np
 from .utils import get_graph
 import base64
@@ -55,7 +56,7 @@ def data_agg(data):
     a = 1
 
     # maximum number of rounds
-    rmax = 3499
+    rmax = 1
 
     ################ END OF PARAMETERS ######################
 
@@ -97,14 +98,14 @@ def data_agg(data):
         if (temp_rnd0 >= m*n+1):
             S[i]["E"] = Eo
             S[i]["ENERGY"] = 0
-            plt.plot(S[i]["xd"], S[i]["yd"], 'o')
+            # plt.plot(S[i]["xd"], S[i]["yd"], 'o')
             # plt.show()
         # end
         # Random Election of Advanced Nodes
         if (temp_rnd0 < m*n+1):
             S[i]["E"] = Eo*(1+a)
             S[i]["ENERGY"] = 1
-            plt.plot(S[i]["xd"], S[i]["yd"], '+')
+            # plt.plot(S[i]["xd"], S[i]["yd"], '+')
 
     #     end
     # end
@@ -136,7 +137,8 @@ def data_agg(data):
     CLUSTERHS = {}
     encryptionTime = []
     decryprionTime = []
-
+    clr = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+           '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
     for r in range(0, rmax, 1):
         print(r)
 
@@ -177,11 +179,12 @@ def data_agg(data):
         # per round
         PACKETS_TO_CH[r+1] = 0
         PACKETS_TO_BS[r+1] = 0
-        BASE_STATION = {}
-        SINK_NODE = {}
+        base_station = []
+        sink_node = []
         plt.figure(1)
 
         for i in range(1, n, 1):
+            print("n------------", i)
             # checking if there is a dead node
             if (S[i]["E"] <= 0):
                 plt.plot(S[i]["xd"], S[i]["yd"], 'r.')
@@ -194,12 +197,13 @@ def data_agg(data):
             if S[i]["E"] > 0:
                 S[i]["type"] = 'N'
                 if (S[i]["ENERGY"] == 0):
-                    plt.plot(S[i]["xd"], S[i]["yd"], 'o')
+                    plt.plot(S[i]["xd"], S[i]["yd"], color=clr[
+                             int(S[i]["xd"]+S[i]["yd"]) % 10], marker='o')
 
                 if (S[i]["ENERGY"] == 1):
                     plt.plot(S[i]["xd"], S[i]["yd"], '+')
 
-        plt.plot(S[n+1]["xd"], S[n+1]["yd"], 'x')
+        # plt.plot(S[n+1]["xd"], S[n+1]["yd"], 'x')
         STATISTICS[r+1]["DEAD"] = dead
         DEAD[r+1] = dead
         DEAD_N[r+1] = dead_n
@@ -237,7 +241,7 @@ def data_agg(data):
                         # decryptedData = decrypt_ECC(S[i]["DATA"], S[i]["privKey"])
                         # d_data = decryptedData[0]
                         # decryprionTime.append(decryptedData[1])
-                        # BASE_STATION.append(d_data)
+                        # base_station.append(d_data)
 
                         S[i]["type"] = 'C'
                         S[i]["G"] = 100
@@ -276,7 +280,7 @@ def data_agg(data):
                         # decryptedData = decrypt_ECC(S[i]["DATA"], S[i]["privKey"])
                         # d_data = decryptedData[0]
                         # decryprionTime.append(decryptedData[1])
-                        # BASE_STATION.append(d_data)
+                        # base_station.append(d_data)
 
                         S[i]["type"] = 'C'
                         S[i]["G"] = 100
@@ -355,20 +359,20 @@ def data_agg(data):
         countCHs
         rcountCHs = rcountCHs+countCHs
     e_data = encrypt_ECC(S[1]["DATA"], S[1]["pubKey"])
-    SINK_NODE = e_data[0]
+    sink_node.append(e_data[0])
     encryptionTime.append(e_data[1])
 
     # end
     print("+++++++++++++++++++ r=", r)
-    x = [i for i in range(1, r+1, 1)]
-    y = [i for i in range(1, r+1, 1)]
+    # x = [i for i in range(1, r+1, 1)]
+    # y = [i for i in range(1, r+1, 1)]
 
-    for i in range(0, r, 1):
-        x[i] = i+1
-        y[i] = n - STATISTICS[i+1]["DEAD"]
+    # for i in range(0, r, 1):
+    #     x[i] = i+1
+    #     y[i] = n - STATISTICS[i+1]["DEAD"]
     # end
-    d_data = decrypt_ECC(SINK_NODE, privKey)
-    BASE_STATION = d_data[0]
+    d_data = decrypt_ECC(sink_node[0], privKey)
+    base_station.append(d_data[0])
     decryprionTime.append(d_data[1])
     print("encrytion time", encryptionTime)
     print("decryption time", decryprionTime)
@@ -377,26 +381,26 @@ def data_agg(data):
     plt.ylabel('Length in m ')
     graph = get_graph()
     charts.append(graph)
-    plt.figure(2)
+    # plt.figure(2)
 
-    plt.plot(x, y, 'k')
-    plt.title('ALIVE NODES vs ROUNDS')
-    plt.xlabel('number of rounds')
-    plt.ylabel('number of alive nodes')
-    graph = get_graph()
-    charts.append(graph)
-    xb = np.array([x for x in range(1, 3500)])
-    dd = np.array(list(DEAD.values()))
-    plt.figure(3)
-    plt.plot(xb, dd, 'k')
-    plt.xlabel('number of rounds')
-    plt.ylabel('number of dead nodes')
-    plt.title('DEAD NODES vs ROUNDS')
-    graph = get_graph()
-    charts.append(graph)
-    print(SINK_NODE, BASE_STATION)
-    final_data["sink"] = SINK_NODE
-    final_data["base"] = BASE_STATION
+    # plt.plot(x, y, 'k')
+    # plt.title('ALIVE NODES vs ROUNDS')
+    # plt.xlabel('number of rounds')
+    # plt.ylabel('number of alive nodes')
+    # graph = get_graph()
+    # charts.append(graph)
+    # xb = np.array([x for x in range(1, 3500)])
+    # dd = np.array(list(DEAD.values()))
+    # plt.figure(3)
+    # plt.plot(xb, dd, 'k')
+    # plt.xlabel('number of rounds')
+    # plt.ylabel('number of dead nodes')
+    # plt.title('DEAD NODES vs ROUNDS')
+    # graph = get_graph()
+    # charts.append(graph)
+    print(sink_node, base_station)
+    final_data["sink"] = str(sink_node[0])
+    final_data["base"] = base_station[0].decode('utf-8')
     final_data["charts"] = charts
     final_data["enc"] = encryptionTime
     final_data["dec"] = decryprionTime

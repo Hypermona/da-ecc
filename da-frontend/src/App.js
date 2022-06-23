@@ -3,6 +3,7 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import Home from "./Components/Home";
 import Loading from "./Components/Loading";
+import Display from "./Components/Dsiplay";
 
 function App() {
   const [images, SetImages] = useState(null);
@@ -30,7 +31,7 @@ function App() {
     })
       .then((r) => r.json())
       .then((d) => {
-        console.log(d);
+        console.log("data", d);
         setIsLoading(false);
         SetImages(d.charts);
         setDec(d.decryption);
@@ -46,15 +47,7 @@ function App() {
   return (
     <div className="App">
       {images ? (
-        <div>
-          {/* <p>Encrypted Data At Sink Node: {sink} S</p>
-          <p>Decrypted Data At Base Node: {base} S</p> */}
-          <p>Encryptio Time: {enc} S</p>
-          <p>Decryption Time: {dec} S</p>
-          {images.map((image, i) => (
-            <img src={`data:image/png;base64,${image}`} alt="" key={i} />
-          ))}
-        </div>
+        <Display sink={sink} base={base} enc={enc} dec={dec} images={images} />
       ) : isLoading ? (
         <Loading />
       ) : (
