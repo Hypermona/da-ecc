@@ -3,13 +3,12 @@ from .ECC import encrypt_ECC, decrypt_ECC
 from collections import namedtuple
 from operator import ge
 from webbrowser import get
-from matplotlib import colors, pyplot as plt
+from matplotlib import colors, markers, pyplot as plt
 import numpy as np
 from .utils import get_graph
 import base64
 from io import BytesIO
-charts = []
-final_data = {}
+import sys
 
 
 def data_agg(data):
@@ -24,6 +23,9 @@ def data_agg(data):
     # Field Dimensions - x and y maximum (in meters)
     xm = 100
     ym = 100
+
+    charts = []
+    final_data = {}
 
     # x and y Coordinates of the Sink
     mdef = namedtuple('sink', 'x y')
@@ -78,14 +80,14 @@ def data_agg(data):
     data: list = data['data']
     # Creation of the random Sensor Network
 
-    S = {x: dict({"xd": None, "yd": None, "type": None, "E": None,
-                  "ENERGY": None, "G": None, "min_dis": None, "min_dis_cluster": None, "privKey": privKey, "pubKey": pubKey, "DATA": ""}) for x in range(1, n+2)}
+    S = {x: dict({"xd": None, "yd": None, "type": None, "E": Eo,
+                  "ENERGY": None, "G": None, "min_dis": None, "min_dis_cluster": None, "privKey": privKey, "pubKey": pubKey, "DATA": ""}) for x in range(0, n+1)}
     for (i, v) in enumerate(data):
-        S[i+1]["DATA"] = bytes(str(v), 'utf-8')
+        S[i]["DATA"] = v
     XR = {}
     YR = {}
 
-    for i in range(1, n):
+    for i in range(0, n):
         print(i)
         S[i]["xd"] = np.random.rand(1, 1)[0][0]*xm
         XR[i] = S[i]["xd"]
@@ -100,21 +102,21 @@ def data_agg(data):
         if (temp_rnd0 >= m*n+1):
             S[i]["E"] = Eo
             S[i]["ENERGY"] = 0
-            # plt.plot(S[i]["xd"], S[i]["yd"], 'o')
+            plt.plot(S[i]["xd"], S[i]["yd"], color="gray", marker='o')
             # plt.show()
         # end
         # Random Election of Advanced Nodes
         if (temp_rnd0 < m*n+1):
             S[i]["E"] = Eo*(1+a)
             S[i]["ENERGY"] = 1
-            # plt.plot(S[i]["xd"], S[i]["yd"], '+')
+            plt.plot(S[i]["xd"], S[i]["yd"], color="gray", marker='o')
 
     #     end
     # end
 
-    S[n+1]["xd"] = sink.x
-    S[n+1]["yd"] = sink.y
-    # plot(S[n+1]["xd"],S[n+1]["yd"],'x')
+    S[n]["xd"] = sink.x
+    S[n]["yd"] = sink.y
+    plt.plot(S[n]["xd"], S[n]["yd"], 'k*', markersize=10)
 
     # First Iteration
     plt.figure(1)
@@ -132,7 +134,7 @@ def data_agg(data):
     PACKETS_TO_CH = {}
     PACKETS_TO_BS = {}
     STATISTICS = {x: dict({"DEAD": None, "CLUSTERHEADS": None})
-                  for x in range(1, rmax+2)}
+                  for x in range(0, rmax)}
     DEAD_N = {}
     DEAD = {}
     DEAD_A = {}
@@ -151,7 +153,7 @@ def data_agg(data):
 
         # Operation for heterogeneous epoch
         if(np.mod(r, round(1/pnrm)) == 0):
-            for i in range(1, n, 1):
+            for i in range(0, n, 1):
                 S[i]["G"] = 0
                 S[i]["cl"] = 0
         #     end
@@ -159,7 +161,7 @@ def data_agg(data):
 
         # Operations for sub-epochs
         if(np.mod(r, round(1/padv)) == 0):
-            for i in range(1, n):
+            for i in range(0, n):
                 if(S[i]["ENERGY"] == 1):
                     S[i]["G"] = 0
                     S[i]["cl"] = 0
@@ -179,17 +181,17 @@ def data_agg(data):
         packets_TO_CH = 0
         # counter for bit transmitted to Bases Station and to Cluster Heads
         # per round
-        PACKETS_TO_CH[r+1] = 0
-        PACKETS_TO_BS[r+1] = 0
+        PACKETS_TO_CH[r] = 0
+        PACKETS_TO_BS[r] = 0
         base_station = []
         sink_node = []
         plt.figure(1)
 
-        for i in range(1, n, 1):
-            print("n------------", i)
+        for i in range(0, n, 1):
+
             # checking if there is a dead node
             if (S[i]["E"] <= 0):
-                plt.plot(S[i]["xd"], S[i]["yd"], 'r.')
+                # plt.plot(S[i]["xd"], S[i]["yd"], 'r.')
                 dead = dead+1
                 if(S[i]["ENERGY"] == 1):
                     dead_a = dead_a+1
@@ -198,18 +200,24 @@ def data_agg(data):
 
             if S[i]["E"] > 0:
                 S[i]["type"] = 'N'
+                x = None
+                y = None
                 if (S[i]["ENERGY"] == 0):
-                    plt.plot(S[i]["xd"], S[i]["yd"], color=clr[
-                             int(S[i]["xd"]+S[i]["yd"]) % 10], marker='o')
-
+                    # plt.plot(S[i]["xd"], S[i]["yd"], color=clr[
+                    #          int(S[i]["xd"]+S[i]["yd"]) % 10], marker='o')
+                    x = S[i]["xd"]
                 if (S[i]["ENERGY"] == 1):
-                    plt.plot(S[i]["xd"], S[i]["yd"], '+')
+                    # plt.plot(S[i]["xd"], S[i]["yd"], '+')
+                    y = S[i]["yd"]
+                if x and y:
+                    # print("x and y_____________", x, y)
+                    plt.Line2D(x, y)
 
         # plt.plot(S[n+1]["xd"], S[n+1]["yd"], 'x')
-        STATISTICS[r+1]["DEAD"] = dead
-        DEAD[r+1] = dead
-        DEAD_N[r+1] = dead_n
-        DEAD_A[r+1] = dead_a
+        STATISTICS[r]["DEAD"] = dead
+        DEAD[r] = dead
+        DEAD_N[r] = dead_n
+        DEAD_A[r] = dead_a
 
         # When the first node dies
         if (dead == 1):
@@ -224,12 +232,14 @@ def data_agg(data):
             dead_50 = r
 
         countCHs = 0
-        cluster = 1
-        C = {x: dict({"xd": None, "yd": None, "distance": None, "id": None,
-                      }) for x in range(1, n+2)}
+        cluster = 0
+        C = {x: dict({"xd": S[0]["xd"], "yd": S[0]["yd"], "distance": S[0]["min_dis"], "id": n-1, "E": S[0]["E"],
+                      }) for x in range(0, n)}
         X = {}
         Y = {}
-        for i in range(1, n, 1):
+        clusetD = []
+        for i in range(0, n, 1):
+
             if(S[i]["E"] > 0):
                 temp_rand = np.random.rand()
                 if ((S[i]["G"]) <= 0):
@@ -237,7 +247,7 @@ def data_agg(data):
                     if((S[i]["ENERGY"] == 0 and (temp_rand <= (pnrm / (1 - pnrm * np.around(np.mod(r, round(1/pnrm)))))))):
                         countCHs = countCHs+1
                         packets_TO_BS = packets_TO_BS+1
-                        PACKETS_TO_BS[r+1] = packets_TO_BS
+                        PACKETS_TO_BS[r] = packets_TO_BS
                         # decrypting data at BS
                         # print("to decrypt", S[i]["DATA"])
                         # decryptedData = decrypt_ECC(S[i]["DATA"], S[i]["privKey"])
@@ -249,16 +259,18 @@ def data_agg(data):
                         S[i]["G"] = 100
                         C[cluster]["xd"] = S[i]["xd"]
                         C[cluster]["yd"] = S[i]["yd"]
-                        plt.plot(S[i]["xd"], S[i]["yd"], 'k*')
+                        plt.plot(S[i]["xd"], S[i]["yd"], 'k^')
 
-                        distance = np.sqrt((S[i]["xd"]-(S[n+1]["xd"])) ** 2 +
-                                           (S[i]["yd"]-(S[n+1]["yd"])) ** 2)
+                        distance = np.sqrt((S[i]["xd"]-(S[n]["xd"])) ** 2 +
+                                           (S[i]["yd"]-(S[n]["yd"])) ** 2)
                         C[cluster]["distance"] = distance
                         C[cluster]["id"] = i
                         X[cluster] = S[i]["xd"]
                         Y[cluster] = S[i]["yd"]
                         cluster = cluster+1
-
+                        clusetD.append((S[i]["xd"], S[i]["yd"]))
+                        # print("cluser1", cluster,
+                        #       S[i]["type"], S[i]["xd"], S[i]["yd"])
                         # Calculation of Energy dissipated
                         distance
                         if (distance > do):
@@ -288,10 +300,12 @@ def data_agg(data):
                         S[i]["G"] = 100
                         C[cluster]["xd"] = S[i]["xd"]
                         C[cluster]["yd"] = S[i]["yd"]
-                        plt.plot(S[i]["xd"], S[i]["yd"], 'k*')
-
+                        plt.plot(S[i]["xd"], S[i]["yd"], 'k^')
+                        clusetD.append((S[i]["xd"], S[i]["yd"]))
+                        # print("cluser2", cluster,
+                        #       S[i]["type"], S[i]["xd"], S[i]["yd"])
                         distance = np.sqrt(
-                            (S[i]["xd"]-(S[n+1]["xd"])) ** 2 + (S[i]["yd"]-(S[n+1]["yd"])) ** 2)
+                            (S[i]["xd"]-(S[n]["xd"])) ** 2 + (S[i]["yd"]-(S[n]["yd"])) ** 2)
                         C[cluster]["distance"] = distance
                         C[cluster]["id"] = i
                         X[cluster] = S[i]["xd"]
@@ -307,6 +321,7 @@ def data_agg(data):
                         if (distance <= do):
                             S[i]["E"] = S[i]["E"] - \
                                 ((ETX+EDA)*(4000) + Efs*4000*(distance * distance))
+
         #                 end
         #             end
 
@@ -314,17 +329,21 @@ def data_agg(data):
         #     end
         # end
 
-        STATISTICS[r+1]["CLUSTERHEADS"] = cluster-1
-        CLUSTERHS[r+1] = cluster-1
+        STATISTICS[r]["CLUSTERHEADS"] = cluster-1
+        CLUSTERHS[r] = cluster-1
 
         # Election of Associated Cluster Head for Normal Nodes
-        for i in range(1, n, 1):
+        cl = []
+        colorTracker = 0
+        for i in range(0, n, 1):
+
             if (S[i]["type"] == 'N' and S[i]["E"] > 0):
-                if(cluster-1 >= 1):
-                    min_dis = np.sqrt((S[i]["xd"]-S[n+1]["xd"]) **
-                                      2 + (S[i]["yd"]-S[n+1]["yd"]) ** 2)
-                    min_dis_cluster = 1
-                    for c in range(1, cluster-1, 1):
+
+                if(cluster >= 0):
+                    min_dis = np.sqrt((S[i]["xd"]-S[n]["xd"]) **
+                                      2 + (S[i]["yd"]-S[n]["yd"]) ** 2)
+                    min_dis_cluster = 0
+                    for c in range(0, cluster, 1):
                         temp = min(min_dis, np.sqrt(
                             (S[i]["xd"]-C[c]["xd"]) ** 2 + (S[i]["yd"]-C[c]["yd"]) ** 2))
                         if (temp < min_dis):
@@ -345,22 +364,56 @@ def data_agg(data):
                     # end
                     # Energy dissipated
                     if(min_dis > 0):
-                        S[C[min_dis_cluster]["id"]]["E"] = S[
-                            C[min_dis_cluster]["id"]]["E"] - ((ERX + EDA)*4000)
-                        PACKETS_TO_CH[r+1] = n-dead-cluster+1
+                        # print("ccccc", C[min_dis_cluster]
+                        #   ["id"], C[min_dis_cluster], min_dis_cluster, S[C[min_dis_cluster]["id"]]["E"])
+                        S[C[min_dis_cluster]["id"]]["E"] = S[C[min_dis_cluster]
+                                                             ["id"]]["E"] - ((ERX + EDA)*4000)
+                        PACKETS_TO_CH[r] = n-dead-cluster+1
+                        if (S[C[min_dis_cluster]["id"]]["xd"], S[C[min_dis_cluster]["id"]]["yd"]) in clusetD:
+                            colorTracker = clusetD.index(
+                                (S[C[min_dis_cluster]["id"]]["xd"], S[C[min_dis_cluster]["id"]]["yd"]))
+                        S[C[min_dis_cluster]["id"]]["DATA"] = np.average(
+                            [S[C[min_dis_cluster]["id"]]["DATA"], S[i]["DATA"]])
+                        c_x = [S[i]["xd"], S[C[min_dis_cluster]["id"]]["xd"]]
+                        c_y = [S[i]["yd"], S[C[min_dis_cluster]["id"]]["yd"]]
+                        plt.plot(S[i]["xd"], S[i]["yd"],
+                                 color=clr[int(colorTracker) % 10], marker='o')
+                        # print("colorTracker", colorTracker)
 
+                        plt.plot(c_x, c_y, color=clr[int(
+                            colorTracker) % 10], alpha=0.2)
+                        cl.append((S[C[min_dis_cluster]["id"]]["xd"],
+                                  S[C[min_dis_cluster]["id"]]["yd"]))
                     # end
 
                     S[i]["min_dis"] = min_dis
                     S[i]["min_dis_cluster"] = min_dis_cluster
-
+            colorTracker -= 1
         #         end
         #     end
         # end
 
+        # Aggregating Cluster Head data to Sink node
+        f_agg = [x["DATA"]
+                 for x in S.values() if x["type"] == "C"]
+        if len(f_agg) <= 0:
+            f_agg = [x["DATA"]
+                     for x in S.values()]
+            f_agg.pop(-1)
+        # print("f_agg", f_agg)
+        S[n]["DATA"] = np.average(f_agg)
+
+        for i in clusetD:
+            s_x = [i[0], S[n]["xd"]]
+            s_y = [i[1], S[n]["yd"]]
+            plt.plot(s_x, s_y, 'k', alpha=0.5)
+        # print(clusetD)
+
         countCHs
+        # print("countCHs ", countCHs)
+        # print("pkt to clusetr", cl)
         rcountCHs = rcountCHs+countCHs
-    e_data = encrypt_ECC(S[1]["DATA"], S[1]["pubKey"])
+    e_data = encrypt_ECC(bytes(str(S[n]["DATA"]), 'utf-8'), S[n]["pubKey"])
     sink_node.append(e_data[0])
     encryptionTime.append(e_data[1])
 
@@ -380,6 +433,15 @@ def data_agg(data):
     print("decryption time", decryprionTime)
     plt.title('Sensor Network')
     plt.xlabel('Breadth in m')
+
+    # legend
+    legend_elements = [plt.Line2D([0], [0], marker='o', color='w', label='Sensor Node',
+                                  markerfacecolor='black', markersize=5)]
+    legend_elements.extend([plt.Line2D([0], [0], marker='^', color='w', label='Cluser Head',
+                                       markerfacecolor="Black", markersize=10)])
+    legend_elements.extend([plt.Line2D([0], [0], marker='*', color='w', label='Sink Node',
+                                       markerfacecolor="Black", markersize=10)])
+    plt.legend(handles=legend_elements, loc='upper right', ncol=2)
     plt.ylabel('Length in m ')
     graph = get_graph()
     charts.append(graph)
@@ -401,10 +463,11 @@ def data_agg(data):
     # graph = get_graph()
     # charts.append(graph)
     print(sink_node, base_station)
-    final_data["sink"] = str(sink_node[0])
+    final_data["sink"] = str(sink_node[0][0])
     final_data["base"] = base_station[0].decode('utf-8')
     final_data["charts"] = charts
     final_data["enc"] = encryptionTime
     final_data["dec"] = decryprionTime
-
+    plt.close()
+    del clusetD
     return final_data
