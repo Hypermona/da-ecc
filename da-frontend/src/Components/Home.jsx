@@ -7,11 +7,30 @@ import TextField from "@mui/material/TextField";
 import List from "@mui/material/List";
 import { ListItem } from "@mui/material";
 import Button from "@mui/material/Button";
+import { lightGreen } from "@mui/material/colors";
+
+const getTemp = () => {
+  return 27 + Math.floor(Math.random() * 10 + 1);
+};
 
 function Home({ submitData }) {
   const [node, setNode] = useState();
   const [energy, setEnergy] = useState();
   const [data, setData] = useState();
+
+  const genRandTemp = (n) => {
+    let tempData = [];
+    for (let i = 0; i < n; i++) {
+      tempData.push(getTemp());
+    }
+    console.log(tempData);
+    return tempData;
+  };
+
+  const SettNode = (v) => {
+    setNode(v);
+    setData(genRandTemp(v));
+  };
 
   return (
     <Container
@@ -36,10 +55,21 @@ function Home({ submitData }) {
             label="Number Of Sensor Nodes"
             variant="filled"
             color="success"
-            onChange={(e) => setNode(e.target.value)}
+            onChange={(e) => SettNode(e.target.value)}
             style={{ width: "35vw", margin: "20px 0" }}
           />
         </ListItem>
+      </div>
+      <p>
+        {data
+          ? data.map((d, i) => (
+              <span key={i} style={{ padding: "5px", margin: "5px" }}>
+                {i + 1} : {d},
+              </span>
+            ))
+          : "Enter Number of nodes"}
+      </p>
+      <div>
         <ListItem>
           <TextField
             id="filled-basic"
@@ -49,7 +79,8 @@ function Home({ submitData }) {
             style={{ width: "35vw", margin: "20px 0" }}
           />
         </ListItem>
-        <ListItem>
+      </div>
+      {/* <ListItem>
           <TextField
             id="filled-basic"
             label="Data For Each Node"
@@ -57,12 +88,11 @@ function Home({ submitData }) {
             onChange={(e) => setData(e.target.value)}
             style={{ width: "35vw", margin: "20px 0" }}
           />
-        </ListItem>
-        <Button variant="contained" onClick={() => submitData({ node, energy, data })}>
-          Start
-        </Button>
-      </div>
-      <Box></Box>
+        </ListItem> */}
+
+      <Button variant="contained" onClick={() => submitData({ node, energy, data })}>
+        Start
+      </Button>
     </Container>
   );
 }
