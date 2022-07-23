@@ -416,7 +416,7 @@ def data_agg(data):
     e_data = encrypt_ECC(bytes(str(S[n]["DATA"]), 'utf-8'), S[n]["pubKey"])
     sink_node.append(e_data[0])
     encryptionTime.append(e_data[1])
-
+    
     # end
     print("+++++++++++++++++++ r=", r)
     # x = [i for i in range(1, r+1, 1)]
